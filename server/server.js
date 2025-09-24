@@ -91,14 +91,46 @@ app.use((err, req, res, next) => {
   }
   
   if (err.name === 'ValidationError') {
-    const errors = Object.values(err.errors).map(e => e.message);
-    return res.status(400).json({ message: 'Validation error', errors });
+    const errors = Object.values(err.errors).map(e => ({
+      field: e.path,
+      message: e.message
+    }));
+    return res.status(400).json({
+      success: false,
+      message: 'Validation error',
+      errors
+    });
   }
   
   if (err.code === 11000) {
     const field = Object.keys(err.keyValue)[0];
-    return res.status(400).json({ message: `${field} already exists` });
+    return res.status(400).json({
+      success: false,
+      message: `${field} already exists`
+    });
   }
+  if (err.name === 'JsonWebTokenError') {
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid token'
+    });
+  }
+
+  // CORS error
+  if (err.message === 'Not allowed by CORS') {
+    return res.status(403).json({
+      success: false,
+      message: 'CORS policy violation'
+    });
+  }
+
+  // Default error
+  res.status(500).json({
+    success: false,
+    message: process.env.NODE_ENV === 'production' 
+      ? 'Something went wrong!' 
+      : err.message
+  });
   
   res.status(500).json({
     message: 'Something went wrong!',

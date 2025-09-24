@@ -1,29 +1,37 @@
-// server/middleware/auth.js
-
 import jwt from 'jsonwebtoken';
 
 export const protect = (req, res, next) => {
-  // Get token from the Authorization header
   const token = req.header('Authorization')?.replace('Bearer ', '');
 
-  // Check if no token is found
   if (!token) {
-    return res.status(401).json({ message: 'No token, authorization denied' });
+    return res.status(401).json({ 
+      success: false,
+      message: 'No token, authorization denied' 
+    });
   }
 
   try {
-    // Use jwt.verify to decode the token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Attach the user payload to the request object
-    req.user = decoded;
+    // Standardize user ID field
+    req.user = {
+      id: decoded.userId,
+      userId: decoded.userId // Keep both for backward compatibility
+    };
     
-    // Proceed to the next middleware or route handler
     next();
   } catch (error) {
-    // Handle invalid tokens (expired, malformed, etc.)
-    res.status(401).json({ message: 'Token is not valid' });
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ 
+        success: false,
+        message: 'Token expired',
+        code: 'TOKEN_EXPIRED'
+      });
+    }
+    
+    res.status(401).json({ 
+      success: false,
+      message: 'Token is not valid' 
+    });
   }
 };
-
-export default protect;
