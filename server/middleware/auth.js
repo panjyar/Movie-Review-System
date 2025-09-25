@@ -13,22 +13,15 @@ export const protect = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    // Standardize user ID field
+    // FIX: Standardize user ID fields for consistency
     req.user = {
-      id: decoded.userId,
-      userId: decoded.userId // Keep both for backward compatibility
+      id: decoded.userId,        // For frontend compatibility
+      userId: decoded.userId,    // For backend compatibility
+      _id: decoded.userId        // For MongoDB compatibility
     };
     
     next();
   } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ 
-        success: false,
-        message: 'Token expired',
-        code: 'TOKEN_EXPIRED'
-      });
-    }
-    
     res.status(401).json({ 
       success: false,
       message: 'Token is not valid' 

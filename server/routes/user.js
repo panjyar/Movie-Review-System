@@ -4,6 +4,7 @@ import User from '../models/User.js';
 import Movie from '../models/Movie.js';
 import Review from '../models/Review.js';
 import { protect } from '../middleware/auth.js';
+import { hash } from 'bcryptjs';
 
 const router = Router();
 
@@ -280,5 +281,116 @@ router.get('/:id/reviews', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+router.put('/profile', protect, [
+  body('username').optional().isLength({ min: 3, max: 30 }),
+  body('email').optional().isEmail(),
+  body('bio').optional().isLength({ max: 500 }),
+  body('favoriteGenres').optional().isArray()
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        success: false,
+        errors: errors.array() 
+      });
+    }
+
+    const { username, email, bio, favoriteGenres } = req.body;
+    const updateData = {};
+
+    if (username) updateData.username = username;
+    if (email) updateData.email = email;
+    if (bio !== undefined) updateData.bio = bio;
+    if (favoriteGenres) updateData.favoriteGenres = favoriteGenres;
+
+    // Check for existing username/email
+    if (username || email) {
+      const query = [];
+      if (username) query.push({ username, _id: { $ne: req.user.userId } });
+      if (email) query.push({ email, _id: { $ne: req.user.userId } });
+      
+      const existingUser = await User.findOne({ $or: query });
+      if (existingUser) {
+        return res.status(400).json({ 
+          success: false,
+          message: 'Username or email already taken' 
+        });
+      }
+    }
+
+    const user = await User.findByIdAndUpdate(
+      req.user.userId,
+      updateData,
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'User not found' 
+      });
+    }
+
+    res.json({
+      success: true,
+      data: user
+    });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error' 
+    });
+  }
+});
+router.put('/password', protect, [
+  body('currentPassword').notEmpty().withMessage('Current password is required'),
+  body('newPassword').isLength({ min: 8 }).withMessage('Password must be at least 8 characters')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/).withMessage('Password must contain uppercase, lowercase and number')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ 
+        success: false,
+        errors: errors.array() 
+      });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+    const user = await User.findById(req.user.userId);
+
+    if (!user) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'User not found' 
+      });
+    }
+
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Current password is incorrect' 
+      });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Password updated successfully'
+    });
+  } catch (error) {
+    console.error('Password change error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error' 
+    });
+  }
+});
+
 
 export default router;
