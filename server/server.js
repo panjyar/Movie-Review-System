@@ -56,7 +56,7 @@ app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 app.use('/api/movies/:id/reviews', reviewLimiter);
 
-// API Routes
+// API Routes - These must come BEFORE static file serving
 app.use('/api/auth', authRoutes);
 app.use('/api/movies', movieRoutes);
 app.use('/api/users', userRoutes);
@@ -72,19 +72,31 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Serve static files in production
+// 404 handler for API routes only - this should come after API routes but before static files
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ message: 'API route not found' });
+});
+
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
-  // Serve the static files from the React app
+  // Serve static files from React build
   app.use(express.static(path.join(__dirname, '../client/build')));
-
-  // The "catchall" handler: for any request that doesn't match one above,
-  // send back React's index.html file.
-  app.get('*', (req, res) => { // Changed '/*' to '*'
+  
+  // Handle React routing - catch all non-API routes and return React app
+  app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
   });
+} else {
+  // Development fallback
+  app.get('/', (req, res) => {
+    res.json({ message: 'API is running in development mode' });
+  });
+  
+  // 404 handler for development
+  app.use('*', (req, res) => {
+    res.status(404).json({ message: 'Route not found' });
+  });
 }
-
 
 // Global error handling middleware
 app.use((err, req, res, next) => {
@@ -117,6 +129,7 @@ app.use((err, req, res, next) => {
       message: `${field} already exists`
     });
   }
+  
   if (err.name === 'JsonWebTokenError') {
     return res.status(401).json({
       success: false,
@@ -131,11 +144,6 @@ app.use((err, req, res, next) => {
       ? 'Something went wrong!'
       : err.message
   });
-});
-
-// 404 handler - this should be placed after all other routes
-app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
 });
 
 const PORT = process.env.PORT || 5000;
