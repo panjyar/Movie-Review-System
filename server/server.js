@@ -73,7 +73,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // 404 handler for API routes only - this should come after API routes but before static files
-app.use('/api/*', (req, res) => {
+app.use('/api/:path(*)', (req, res) => {
   res.status(404).json({ message: 'API route not found' });
 });
 
