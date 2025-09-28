@@ -65,8 +65,8 @@ app.use('/api/admin', adminRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
+  res.json({
+    status: 'OK',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development'
   });
@@ -74,23 +74,29 @@ app.get('/api/health', (req, res) => {
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
+  // Serve the static files from the React app
   app.use(express.static(path.join(__dirname, '../client/build')));
-  
-app.get('/:pathMatch(.*)*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
 
+  // The "catchall" handler: for any request that doesn't match one above,
+  // send back React's index.html file.
+  app.get('/*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
+  });
 }
 
 
 // Global error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  
+
+  if (res.headersSent) {
+    return next(err);
+  }
+
   if (err.message === 'Not allowed by CORS') {
     return res.status(403).json({ message: 'CORS policy violation' });
   }
-  
+
   if (err.name === 'ValidationError') {
     const errors = Object.values(err.errors).map(e => ({
       field: e.path,
@@ -102,7 +108,7 @@ app.use((err, req, res, next) => {
       errors
     });
   }
-  
+
   if (err.code === 11000) {
     const field = Object.keys(err.keyValue)[0];
     return res.status(400).json({
@@ -117,29 +123,16 @@ app.use((err, req, res, next) => {
     });
   }
 
-  // CORS error
-  if (err.message === 'Not allowed by CORS') {
-    return res.status(403).json({
-      success: false,
-      message: 'CORS policy violation'
-    });
-  }
-
   // Default error
   res.status(500).json({
     success: false,
-    message: process.env.NODE_ENV === 'production' 
-      ? 'Something went wrong!' 
+    message: process.env.NODE_ENV === 'production'
+      ? 'Something went wrong!'
       : err.message
-  });
-  
-  res.status(500).json({
-    message: 'Something went wrong!',
-    ...(process.env.NODE_ENV === 'development' && { error: err.message })
   });
 });
 
-// 404 handler
+// 404 handler - this should be placed after all other routes
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
