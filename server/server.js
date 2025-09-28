@@ -74,22 +74,16 @@ app.get('/api/health', (req, res) => {
 
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
-  // Serve static files from React build
   app.use(express.static(path.join(__dirname, '../client/build')));
   
-  // Handle React routing - catch all non-API routes and return React app
-  app.get('*', (req, res) => {
+  // Simple fallback - just handle the root and common routes
+  app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
   });
-} else {
-  // Development fallback
-  app.get('/', (req, res) => {
-    res.json({ message: 'API is running in development mode' });
-  });
   
-  // 404 handler for development
-  app.use('*', (req, res) => {
-    res.status(404).json({ message: 'Route not found' });
+  // Handle common SPA routes manually if needed
+  app.get('/dashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/build', 'index.html'));
   });
 }
 
