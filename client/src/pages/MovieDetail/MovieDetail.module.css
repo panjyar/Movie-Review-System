@@ -1,15 +1,60 @@
-.movie-detail {
-  min-height: 100vh;
-  position: relative;
+/* === FONT & ROOT VARIABLES === */
+:root {
+  --color-background: #12181f;
+  --color-surface: #1a222a;
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #94a3b8;
+  --color-text-muted: #64748b;
+  --color-border: #334155;
+  --font-body: "Poppins", sans-serif;
 }
 
+/* === MAIN WRAPPER & EFFECTS === */
+.movie-detail-wrapper {
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  position: relative;
+  overflow: hidden; /* Prevent grain from overflowing */
+}
+
+/* Grainy Effect Overlay */
+.grain-overlay {
+  position: fixed; /* Fixed to cover the whole screen */
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background-image: url('https://www.transparenttextures.com/patterns/grain.png');
+  opacity: 0.04;
+  z-index: 1000;
+  pointer-events: none;
+  animation: grain 8s steps(10) infinite;
+}
+
+@keyframes grain {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-5%, -10%); }
+  20% { transform: translate(-15%, 5%); }
+  30% { transform: translate(7%, -25%); }
+  40% { transform: translate(-5%, 25%); }
+  50% { transform: translate(-15%, 10%); }
+  60% { transform: translate(15%, 0%); }
+  70% { transform: translate(0%, 15%); }
+  80% { transform: translate(3%, 35%); }
+  90% { transform: translate(-10%, 10%); }
+}
+
+
+/* === BACKDROP STYLING === */
 .movie-backdrop {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  height: 50vh;
-  overflow: hidden;
+  width: 100%;
+  height: 60vh;
   z-index: 1;
 }
 
@@ -17,346 +62,225 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  filter: blur(8px); /* Blur effect */
+  transform: scale(1.1); /* Avoid hard edges from blur */
 }
 
 .backdrop-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.7));
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    var(--color-background) 10%,
+    rgba(18, 24, 31, 0.7) 50%,
+    rgba(18, 24, 31, 0.4) 100%
+  );
 }
 
+
+/* === CONTENT LAYOUT === */
 .movie-content {
   position: relative;
   z-index: 2;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
-  background: rgba(255, 255, 255, 0.95);
-  margin-top: 30vh;
-  border-radius: 20px 20px 0 0;
-  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.1);
+  padding: 0 2rem 4rem; /* Remove top padding */
 }
 
 .movie-main {
   display: grid;
   grid-template-columns: 300px 1fr;
   gap: 3rem;
-  margin-bottom: 3rem;
+  padding-top: 10vh; /* Push content down from the top */
+  margin-bottom: 4rem;
 }
 
+
+/* === POSTER SECTION === */
 .movie-poster-section {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.5rem;
 }
 
 .movie-poster-large {
   width: 100%;
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--color-border);
 }
 
+
+/* === INFO SECTION === */
 .movie-info-section {
-  padding-top: 1rem;
+  padding-top: 2rem;
 }
 
 .movie-title-large {
-  font-size: 2.5rem;
-  font-weight: 800;
-  color: #2d3748;
-  margin-bottom: 1rem;
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
   line-height: 1.2;
+  letter-spacing: -0.5px;
 }
 
 .movie-meta {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  color: #718096;
-  font-weight: 600;
-}
-
-.separator {
-  color: #cbd5e0;
-}
-
-.genres-list {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.genre-badge {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 15px;
-  font-size: 0.8rem;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  color: var(--color-text-secondary);
   font-weight: 500;
 }
 
 .rating-section {
-  margin-bottom: 2rem;
-}
-
-.rating-display {
   display: flex;
   align-items: center;
   gap: 1rem;
+  margin-bottom: 2rem;
 }
 
-.rating-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+.ratingText {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
 }
-
-.rating-score {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #2d3748;
+.ratingTotal {
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
 }
-
-.rating-count {
-  color: #718096;
+.reviewCount {
+  margin-left: 0.5rem;
   font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+
+.movie-info-section h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  border-left: 3px solid var(--color-primary);
+  padding-left: 0.75rem;
 }
 
 .movie-overview {
-  margin-bottom: 2rem;
+  color: var(--color-text-secondary);
+  line-height: 1.7;
+  max-width: 70ch; /* Optimal reading line length */
 }
 
-.movie-overview h3 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #2d3748;
-  margin-bottom: 1rem;
-}
 
-.movie-overview p {
-  color: #4a5568;
-  line-height: 1.6;
-  font-size: 1rem;
-}
-
-.movie-crew {
-  margin-bottom: 2rem;
-}
-
-.crew-member {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.crew-role {
-  font-weight: 600;
-  color: #2d3748;
-  min-width: 80px;
-}
-
-.crew-name {
-  color: #4a5568;
-}
-
+/* === BUTTONS & ACTIONS === */
 .action-buttons {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  margin-top: 2rem;
 }
 
 .btn {
   padding: 0.75rem 1.5rem;
-  border-radius: 25px;
+  border-radius: 8px;
   font-weight: 600;
-  transition: all 0.3s ease;
+  font-size: 1rem;
+  transition: all 0.2s ease;
   border: none;
   cursor: pointer;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--color-primary);
   color: white;
 }
-
 .btn-primary:hover {
+  background: var(--color-primary-hover);
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-}
-
-.btn-outline {
-  background: transparent;
-  color: #667eea;
-  border: 2px solid #667eea;
-}
-
-.btn-outline:hover {
-  background: #667eea;
-  color: white;
-  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
 }
 
 .user-review-status {
   display: flex;
   align-items: center;
-  padding: 0.75rem 1rem;
-  background: #f0fff4;
-  color: #38a169;
-  border-radius: 10px;
-  font-weight: 600;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background-color: rgba(59, 130, 246, 0.1);
+  border: 1px solid var(--color-primary);
+  border-radius: 8px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
 }
 
-.cast-section, .trailers-section, .reviews-section {
-  margin-bottom: 3rem;
-}
-
-.cast-section h3, .trailers-section h3, .reviews-section h3 {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #2d3748;
-  margin-bottom: 2rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid #e2e8f0;
-}
-
-.cast-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1.5rem;
-}
-
-.cast-member {
-  background: white;
-  border-radius: 15px;
-  overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
-}
-
-.cast-member:hover {
-  transform: translateY(-5px);
-}
-
-.cast-photo {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-}
-
-.cast-info {
-  padding: 1rem;
-}
-
-.cast-name {
-  font-weight: 600;
-  color: #2d3748;
-  margin-bottom: 0.25rem;
-}
-
-.cast-character {
-  color: #718096;
+.editReviewBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  color: var(--color-primary);
+  border: none;
+  padding: 0;
+  cursor: pointer;
   font-size: 0.9rem;
-}
-
-.trailers-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 2rem;
-}
-
-.trailer-item {
-  background: white;
-  border-radius: 15px;
-  overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-.trailer-video {
-  width: 100%;
-  height: 250px;
-}
-
-.trailer-name {
-  padding: 1rem;
-  margin: 0;
   font-weight: 600;
-  color: #2d3748;
+  transition: color 0.2s ease;
+}
+.editReviewBtn:hover {
+  color: #60a5fa;
 }
 
+
+/* === REVIEWS SECTION === */
+.reviews-section {
+  padding-top: 2rem;
+  border-top: 1px solid var(--color-border);
+}
 .reviews-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   margin-bottom: 2rem;
 }
-
-.add-review-btn {
-  font-size: 0.9rem;
-  padding: 0.5rem 1rem;
+.reviews-header h3 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
 }
 
+
+/* === UTILITIES & RESPONSIVE === */
+.separator {
+  color: var(--color-text-muted);
+}
 .error-page, .not-found {
+  min-height: 80vh;
   display: flex;
-  align-items: center;
   justify-content: center;
-  min-height: 50vh;
-  text-align: center;
-  font-size: 1.2rem;
-  color: #e53e3e;
+  align-items: center;
+  font-size: 1.5rem;
+  color: #fca5a5;
 }
 
 @media screen and (max-width: 768px) {
   .movie-content {
-    padding: 1rem;
-    margin-top: 25vh;
+    padding: 0 1rem 3rem;
   }
-
   .movie-main {
     grid-template-columns: 1fr;
-    gap: 2rem;
+    padding-top: 25vh; /* Poster sits on backdrop on mobile */
+    gap: 1rem;
+  }
+  .movie-poster-section {
+    max-width: 200px;
+    margin: 0 auto 1.5rem;
+  }
+  .movie-info-section {
+    padding-top: 0;
     text-align: center;
   }
-
-  .movie-poster-section {
-    max-width: 250px;
-    margin: 0 auto;
-  }
-
-  .movie-title-large {
-    font-size: 2rem;
-  }
-
-  .movie-meta {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .rating-display {
-    justify-content: center;
-  }
-
+  .movie-meta,
+  .rating-section,
   .action-buttons {
     justify-content: center;
   }
-
-  .cast-grid {
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  .movie-info-section h3 {
+    text-align: left;
   }
-
-  .trailers-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .reviews-header {
-    flex-direction: column;
-    gap: 1rem;
+  .movie-overview {
+    text-align: left;
   }
 }

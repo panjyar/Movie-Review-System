@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/TempAuth';
 import { toast } from 'react-toastify';
 import styles from './PasswordSettings.module.css';
 

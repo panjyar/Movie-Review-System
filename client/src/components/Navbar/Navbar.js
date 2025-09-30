@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/TempAuth';
 import styles from './Navbar.module.css';
 
 const Navbar = () => {
@@ -44,7 +44,7 @@ const Navbar = () => {
               </button>
               <div className={styles['user-info']}>
                 <img 
-                  src={user?.profilePicture || '/default-avatar.png'} 
+                  src={user?.profilePicture || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face&auto=format'} 
                   alt={user?.username}
                   className={styles['user-avatar']}
                 />

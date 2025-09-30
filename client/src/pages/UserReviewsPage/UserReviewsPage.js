@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/TempAuth';
 import { Link } from 'react-router-dom';
 import StarRating from '../../components/StarRating/StarRating';
 import LoadingSpinner from '../../components/LoadingSpinner/LoadingSpinner';

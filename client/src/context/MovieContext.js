@@ -95,15 +95,18 @@ export const MovieProvider = ({ children }) => {
   };
 
   // Fetch trending movies
-  const fetchTrendingMovies = async () => {
-    dispatch({ type: 'SET_LOADING', payload: true });
-    try {
-      const res = await axios.get('/api/movies/trending');
-      dispatch({ type: 'SET_TRENDING_MOVIES', payload: res.data });
-    } catch (err) {
-      dispatch({ type: 'SET_ERROR', payload: err.response?.data?.message || 'Error fetching trending movies' });
-    }
-  };
+ // Corrected function in MovieProvider
+
+const fetchTrendingMovies = async () => {
+  dispatch({ type: 'SET_LOADING', payload: true });
+  try {
+    const res = await axios.get('/api/movies/trending');
+    // FIX: Access the nested .data property to get the array of movies
+    dispatch({ type: 'SET_TRENDING_MOVIES', payload: res.data.data }); 
+  } catch (err) {
+    dispatch({ type: 'SET_ERROR', payload: err.response?.data?.message || 'Error fetching trending movies' });
+  }
+};
 
   // Fetch single movie
   const fetchMovie = async (id) => {

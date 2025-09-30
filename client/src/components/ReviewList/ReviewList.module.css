@@ -1,151 +1,124 @@
-.review-section {
+.reviewSection {
   margin-top: 3rem;
 }
 
-.review-header {
+.reviewHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 2px solid #e2e8f0;
+  margin-bottom: 1.5rem;
 }
 
-.review-header h2 {
-  font-size: 1.8rem;
-  color: #2d3748;
-  margin: 0;
-}
-
-.sort-controls {
+.sortControls {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.sort-controls label {
-  font-weight: 600;
-  color: #4a5568;
-}
-
-.sort-dropdown {
-  padding: 0.5rem;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  background: white;
   font-size: 0.9rem;
-  color: #4a5568;
+  color: var(--color-text-secondary);
+}
+
+.sortDropdown {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
   cursor: pointer;
-  transition: border-color 0.3s ease;
+  transition: border-color 0.2s;
 }
-
-.sort-dropdown:focus {
+.sortDropdown:focus {
+  border-color: var(--color-primary);
   outline: none;
-  border-color: #667eea;
 }
 
-.review-list {
+.reviewList {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
 }
 
-.review-card {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 15px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+.reviewCard {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 1.25rem;
+  border-radius: 12px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
-
-.review-card:hover {
+.reviewCard:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
 }
 
-.review-card-header {
+.reviewCardHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.75rem;
 }
 
-.review-user {
-  font-weight: 700;
-  color: #2d3748;
-  font-size: 1rem;
+.reviewerInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
-.review-date {
-  color: #718096;
-  font-size: 0.9rem;
+.reviewerAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--color-border);
 }
 
-.review-rating {
-  margin-bottom: 1rem;
-}
-
-.review-text {
-  color: #4a5568;
-  line-height: 1.6;
-  font-size: 1rem;
-  margin: 0;
-}
-
-.load-more-button {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 0.75rem 2rem;
-  border-radius: 25px;
+.reviewUser {
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  color: var(--color-text-primary);
+}
+
+.reviewDate {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.reviewTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0.5rem 0;
+  color: var(--color-text-primary);
+}
+
+.reviewText {
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+}
+
+.loadMoreButton {
   margin: 2rem auto 0;
   display: block;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
 }
-
-.load-more-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+.loadMoreButton:hover {
+  background-color: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
 }
-
-.load-more-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.no-reviews {
+.noReviews {
   text-align: center;
-  padding: 3rem 2rem;
-  color: #718096;
+  color: var(--color-text-muted);
+  font-style: italic;
+  margin-top: 2rem;
 }
-
-.no-reviews-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-}
-
-@media screen and (max-width: 768px) {
-  .review-header {
-    flex-direction: column;
-    gap: 1rem;
-    text-align: center;
-  }
-
-  .sort-controls {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .review-card {
-    padding: 1rem;
-  }
-
-  .review-card-header {
-    flex-direction: column;
-    gap: 0.5rem;
-    text-align: center;
-  }
+.noReviews span {
+  display: block;
+  margin-top: 0.5rem;
+  color: var(--color-primary);
+  font-weight: 500;
 }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/TempAuth';
 import { toast } from 'react-toastify';
 import LoadingSpinner from '../../components/LoadingSpinner/LoadingSpinner';
 import styles from './Auth.module.css';

@@ -16,7 +16,6 @@ const initialState = {
 const authReducer = (state, action) => {
   switch (action.type) {
     case 'USER_LOADED':
-      // Ensure consistent ID field - normalize to 'id'
       const normalizedUser = {
         ...action.payload,
         id: action.payload._id || action.payload.id
@@ -31,7 +30,6 @@ const authReducer = (state, action) => {
     case 'LOGIN_SUCCESS':
     case 'REGISTER_SUCCESS':
       localStorage.setItem('token', action.payload.token);
-      // Normalize user ID here too
       const normalizedRegUser = action.payload.user ? {
         ...action.payload.user,
         id: action.payload.user._id || action.payload.user.id
@@ -113,7 +111,7 @@ export const AuthProvider = ({ children }) => {
         payload: res.data
       });
       setAuthToken(res.data.token);
-      await loadUser(); // Load full user data after registration
+      await loadUser();
       return { success: true };
     } catch (err) {
       const error = err.response?.data?.message || 'Registration failed';
@@ -129,7 +127,6 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await axios.post('/api/auth/login', formData);
       
-      // Check if login was actually successful
       if (!res.data.token || !res.data.user) {
         throw new Error('Invalid login response');
       }
@@ -139,6 +136,7 @@ export const AuthProvider = ({ children }) => {
         payload: res.data
       });
       setAuthToken(res.data.token);
+      await loadUser(); // Reload user data after login
       return { success: true };
     } catch (err) {
       const error = err.response?.data?.message || 'Login failed';
@@ -150,14 +148,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // FIXED: Update profile endpoint to use correct route
   const updateProfile = async (formData) => {
     try {
-      const res = await axios.put('/api/users/profile', formData);
-      dispatch({
-        type: 'PROFILE_UPDATED',
-        payload: res.data,
-      });
-      return { success: true };
+      if (!state.user?.id) {
+        throw new Error('User not authenticated');
+      }
+
+      const res = await axios.put(`/api/users/${state.user.id}`, formData);
+      
+      if (res.data.success) {
+        dispatch({
+          type: 'PROFILE_UPDATED',
+          payload: res.data.user,
+        });
+        return { success: true };
+      } else {
+        return { success: false, error: res.data.message || 'Profile update failed' };
+      }
     } catch (err) {
       const error = err.response?.data?.message || 'Profile update failed';
       return { success: false, error };

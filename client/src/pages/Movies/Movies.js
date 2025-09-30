@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useMovies } from '../../context/MovieContext';
-import { useAuth } from '../../context/AuthContext'; // IMPROVEMENT: Import useAuth
+import { useAuth } from '../../context/TempAuth'; 
 import MovieCard from '../../components/MovieCard/MovieCard';
 import SearchFilters from '../../components/SearchFilters/SearchFilters';
 import LoadingSpinner from '../../components/LoadingSpinner/LoadingSpinner';

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/TempAuth';
 import { toast } from 'react-toastify';
 import styles from './WatchlistButton.module.css';
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/TempAuth";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import LoadingSpinner from "../../components/LoadingSpinner/LoadingSpinner";
@@ -305,7 +305,14 @@ const Profile = () => {
             <div>
               <h1>{user.username}</h1>
               <p className={styles.memberSince}>
-                Member since {new Date(user.createdAt).toLocaleDateString()}
+                Member since{" "}
+                {user.createdAt
+                  ? new Date(user.createdAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  : "Recently"}
               </p>
             </div>
           </div>

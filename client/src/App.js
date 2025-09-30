@@ -4,7 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from './context/TempAuth';
 import { MovieProvider } from './context/MovieContext';
 import Navbar from './components/Navbar/Navbar';
 import Home from './pages/Home/Home';
