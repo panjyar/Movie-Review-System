@@ -7,7 +7,6 @@ import { protect } from '../middleware/auth.js';
 
 const router = Router();
 
-// Get all reviews with pagination
 router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -37,7 +36,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get single review
 router.get('/:id', async (req, res) => {
   try {
     const review = await Review.findById(req.params.id)
@@ -55,7 +53,7 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Update review
+// CRITICAL FIX: Changed req.user.userId to req.user._id
 router.put('/:id', protect, [
   body('rating').optional().isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5'),
   body('title').optional().notEmpty().withMessage('Review title is required'),
@@ -73,7 +71,8 @@ router.put('/:id', protect, [
       return res.status(404).json({ message: 'Review not found' });
     }
 
-    if (review.user.toString() !== req.user.userId) {
+    // FIXED: Use req.user._id
+    if (review.user.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Access denied' });
     }
 
@@ -103,7 +102,7 @@ router.put('/:id', protect, [
   }
 });
 
-// Delete review
+// CRITICAL FIX: Changed req.user.userId to req.user._id
 router.delete('/:id', protect, async (req, res) => {
   try {
     const review = await Review.findById(req.params.id);
@@ -112,8 +111,9 @@ router.delete('/:id', protect, async (req, res) => {
       return res.status(404).json({ message: 'Review not found' });
     }
 
-    const user = await User.findById(req.user.userId);
-    if (review.user.toString() !== req.user.userId && user.role !== 'admin') {
+    // FIXED: Use req.user._id
+    const user = await User.findById(req.user._id);
+    if (review.user.toString() !== req.user._id.toString() && user.role !== 'admin') {
       return res.status(403).json({ message: 'Access denied' });
     }
 
@@ -132,7 +132,7 @@ router.delete('/:id', protect, async (req, res) => {
   }
 });
 
-// Bulk delete reviews (Admin only)
+// CRITICAL FIX: Changed req.user.userId to req.user._id
 router.delete('/bulk', protect, async (req, res) => {
   try {
     const { reviewIds } = req.body;
@@ -141,15 +141,14 @@ router.delete('/bulk', protect, async (req, res) => {
       return res.status(400).json({ message: 'Review IDs array is required' });
     }
 
-    // Check if user is admin
-    const user = await User.findById(req.user.userId);
+    // FIXED: Use req.user._id
+    const user = await User.findById(req.user._id);
     if (!user || user.role !== 'admin') {
       return res.status(403).json({ message: 'Access denied. Admin rights required.' });
     }
 
     const result = await Review.deleteMany({ _id: { $in: reviewIds } });
 
-    // Update average ratings for affected movies
     const reviews = await Review.find({ _id: { $in: reviewIds } }).select('movie');
     const movieIds = [...new Set(reviews.map(review => review.movie.toString()))];
     
@@ -170,7 +169,7 @@ router.delete('/bulk', protect, async (req, res) => {
   }
 });
 
-// Like/Unlike review
+// CRITICAL FIX: Changed req.user.userId to req.user._id
 router.post('/:id/like', protect, async (req, res) => {
   try {
     const review = await Review.findById(req.params.id);
@@ -179,14 +178,15 @@ router.post('/:id/like', protect, async (req, res) => {
       return res.status(404).json({ message: 'Review not found' });
     }
 
-    const userId = req.user.userId;
-    const hasLiked = review.likes.includes(userId);
-    const hasDisliked = review.dislikes.includes(userId);
+    // FIXED: Use req.user._id
+    const userId = req.user._id.toString();
+    const hasLiked = review.likes.some(id => id.toString() === userId);
+    const hasDisliked = review.dislikes.some(id => id.toString() === userId);
 
     if (hasLiked) {
       review.likes = review.likes.filter(id => id.toString() !== userId);
     } else {
-      review.likes.push(userId);
+      review.likes.push(req.user._id);
       if (hasDisliked) {
         review.dislikes = review.dislikes.filter(id => id.toString() !== userId);
       }
@@ -205,7 +205,7 @@ router.post('/:id/like', protect, async (req, res) => {
   }
 });
 
-// Dislike/Remove dislike review
+// CRITICAL FIX: Changed req.user.userId to req.user._id
 router.post('/:id/dislike', protect, async (req, res) => {
   try {
     const review = await Review.findById(req.params.id);
@@ -214,14 +214,15 @@ router.post('/:id/dislike', protect, async (req, res) => {
       return res.status(404).json({ message: 'Review not found' });
     }
 
-    const userId = req.user.userId;
-    const hasLiked = review.likes.includes(userId);
-    const hasDisliked = review.dislikes.includes(userId);
+    // FIXED: Use req.user._id
+    const userId = req.user._id.toString();
+    const hasLiked = review.likes.some(id => id.toString() === userId);
+    const hasDisliked = review.dislikes.some(id => id.toString() === userId);
 
     if (hasDisliked) {
       review.dislikes = review.dislikes.filter(id => id.toString() !== userId);
     } else {
-      review.dislikes.push(userId);
+      review.dislikes.push(req.user._id);
       if (hasLiked) {
         review.likes = review.likes.filter(id => id.toString() !== userId);
       }

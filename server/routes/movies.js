@@ -1,8 +1,6 @@
 import { Router } from 'express';
-// FIX 1: Use a default import for axios
 import axios from 'axios';
 import { body, validationResult, query } from 'express-validator';
-// FIX 2: Import only the default model and add the .js extension
 import Movie from '../models/Movie.js';
 import Review from '../models/Review.js';
 import { protect } from '../middleware/auth.js';
@@ -10,14 +8,12 @@ import admin from '../middleware/admin.js';
 
 const router = Router();
 
-// TMDB API configuration
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 
-// Get all movies with pagination and filters
 router.get('/', [
-  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
-  query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('Limit must be between 1 and 50'),
+  query('page').optional().isInt({ min: 1 }),
+  query('limit').optional().isInt({ min: 1, max: 50 }),
   query('genre').optional().isString(),
   query('year').optional().isInt({ min: 1900, max: 2030 }),
   query('search').optional().isString(),
@@ -59,7 +55,6 @@ router.get('/', [
       default: sort.createdAt = -1;
     }
 
-    // FIX 3: Call methods on the imported models
     const movies = await Movie.find(filter)
       .sort(sort)
       .skip(skip)
@@ -85,21 +80,52 @@ router.get('/', [
   }
 });
 
-// Get trending movies from TMDB
+router.delete('/bulk', protect, admin, async (req, res) => {
+  try {
+    const { movieIds } = req.body;
+
+    if (!Array.isArray(movieIds) || movieIds.length === 0) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Movie IDs array is required' 
+      });
+    }
+
+    const result = await Movie.deleteMany({ _id: { $in: movieIds } });
+    await Review.deleteMany({ movie: { $in: movieIds } });
+
+    res.json({ 
+      success: true,
+      message: `${result.deletedCount} movies deleted successfully`,
+      deletedCount: result.deletedCount
+    });
+  } catch (error) {
+    console.error('Bulk delete error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error' 
+    });
+  }
+});
+
 router.get('/trending', async (req, res) => {
   try {
-    // FIX 1: Use axios.get
+    const page = parseInt(req.query.page) || 1;
     const response = await axios.get(`${TMDB_BASE_URL}/trending/movie/week`, {
-      params: { api_key: TMDB_API_KEY }
+      params: { api_key: TMDB_API_KEY, page },
+      timeout: 10000
     });
 
-    const trendingMovies = response.data.results.slice(0, 10);
-    
-    for (const tmdbMovie of trendingMovies) {
-      // FIX 3: Call findOne on the Movie model
+    const trendingMovies = response.data.results;
+
+    const moviePromises = trendingMovies.map(async (tmdbMovie) => {
       let movie = await Movie.findOne({ tmdbId: tmdbMovie.id });
-      
       if (!movie) {
+        const detailsResponse = await axios.get(`${TMDB_BASE_URL}/movie/${tmdbMovie.id}`, {
+          params: { api_key: TMDB_API_KEY },
+          timeout: 5000
+        });
+
         movie = new Movie({
           tmdbId: tmdbMovie.id,
           title: tmdbMovie.title,
@@ -108,45 +134,43 @@ router.get('/trending', async (req, res) => {
           posterPath: tmdbMovie.poster_path,
           backdropPath: tmdbMovie.backdrop_path,
           voteAverage: tmdbMovie.vote_average,
-          voteCount: tmdbMovie.vote_count
+          voteCount: tmdbMovie.vote_count,
+          genres: detailsResponse.data.genres || [],
+          runtime: detailsResponse.data.runtime || 0
         });
-        
-        try {
-          const detailsResponse = await axios.get(`${TMDB_BASE_URL}/movie/${tmdbMovie.id}`, {
-            params: { api_key: TMDB_API_KEY }
-          });
-          
-          movie.genres = detailsResponse.data.genres;
-          movie.runtime = detailsResponse.data.runtime;
-        } catch (detailError) {
-          console.error('Error fetching movie details:', detailError.message);
-        }
-        
+
         await movie.save();
       }
-    }
+      return movie;
+    });
 
-    const movies = await Movie.find({ tmdbId: { $in: trendingMovies.map(m => m.id) } })
-      .select('title overview releaseDate genres posterPath averageRating totalReviews runtime');
+    const movies = (await Promise.all(moviePromises)).filter(Boolean);
 
-    res.json(movies);
+    res.json({
+      success: true,
+      data: movies,
+      pagination: {
+        currentPage: page,
+        hasNext: page < response.data.total_pages
+      }
+    });
   } catch (error) {
-    console.error(error.message);
-    res.status(500).json({ message: 'Error fetching trending movies' });
+    console.error('Trending movies error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching trending movies'
+    });
   }
 });
 
-// Get single movie by ID
 router.get('/:id', async (req, res) => {
   try {
-    // FIX 3: Call findById on the Movie model
     const movie = await Movie.findById(req.params.id);
     
     if (!movie) {
       return res.status(404).json({ message: 'Movie not found' });
     }
 
-    // FIX 3: Call find on the Review model
     const reviews = await Review.find({ movie: movie._id })
       .populate('user', 'username profilePicture')
       .sort({ createdAt: -1 })
@@ -159,7 +183,6 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Add new movie (Admin only)
 router.post('/', [protect, admin], [
   body('title').notEmpty().withMessage('Title is required'),
   body('overview').notEmpty().withMessage('Overview is required'),
@@ -184,7 +207,6 @@ router.post('/', [protect, admin], [
   }
 });
 
-// Update movie (Admin only)
 router.put('/:id', [protect, admin], [
   body('title').optional().notEmpty().withMessage('Title cannot be empty'),
   body('overview').optional().notEmpty().withMessage('Overview cannot be empty'),
@@ -209,7 +231,6 @@ router.put('/:id', [protect, admin], [
   }
 });
 
-// Delete movie (Admin only)
 router.delete('/:id', [protect, admin], async (req, res) => {
   try {
     const movie = await Movie.findByIdAndDelete(req.params.id);
@@ -218,7 +239,6 @@ router.delete('/:id', [protect, admin], async (req, res) => {
       return res.status(404).json({ message: 'Movie not found' });
     }
 
-    // Also delete associated reviews
     await Review.deleteMany({ movie: req.params.id });
 
     res.json({ message: 'Movie deleted successfully' });
@@ -228,31 +248,6 @@ router.delete('/:id', [protect, admin], async (req, res) => {
   }
 });
 
-// Bulk delete movies (Admin only)
-router.delete('/bulk', [protect, admin], async (req, res) => {
-  try {
-    const { movieIds } = req.body;
-
-    if (!Array.isArray(movieIds) || movieIds.length === 0) {
-      return res.status(400).json({ message: 'Movie IDs array is required' });
-    }
-
-    const result = await Movie.deleteMany({ _id: { $in: movieIds } });
-    
-    // Also delete associated reviews
-    await Review.deleteMany({ movie: { $in: movieIds } });
-
-    res.json({ 
-      message: `${result.deletedCount} movies deleted successfully`,
-      deletedCount: result.deletedCount
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// Get movie reviews
 router.get('/:id/reviews', [
   query('page').optional().isInt({ min: 1 }),
   query('limit').optional().isInt({ min: 1, max: 50 }),
@@ -293,7 +288,7 @@ router.get('/:id/reviews', [
   }
 });
 
-// Submit movie review
+// CRITICAL FIX: Changed req.user.userId to req.user._id
 router.post('/:id/reviews', protect, [
   body('rating').isInt({ min: 1, max: 5 }).withMessage('Rating must be between 1 and 5'),
   body('title').notEmpty().withMessage('Review title is required'),
@@ -307,7 +302,7 @@ router.post('/:id/reviews', protect, [
 
     const { rating, title, content } = req.body;
     const movieId = req.params.id;
-    const userId = req.user.userId;
+    const userId = req.user._id; // FIXED: was req.user.userId
 
     const movie = await Movie.findById(movieId);
     if (!movie) {
@@ -329,11 +324,12 @@ router.post('/:id/reviews', protect, [
 
     await review.save();
     await review.populate('user', 'username profilePicture');
+    await movie.updateAverageRating();
 
     res.status(201).json(review);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Review submission error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 

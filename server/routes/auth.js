@@ -2,6 +2,7 @@ import { Router } from 'express';
 import jwt from 'jsonwebtoken';
 import { body, validationResult } from 'express-validator';
 import User from '../models/User.js';
+import Review from '../models/Review.js';
 import { protect } from '../middleware/auth.js';
 
 const router = Router();
@@ -44,10 +45,15 @@ router.post('/register', [
       token,
       user: {
         id: user._id,
+        _id: user._id,
         username: user.username,
         email: user.email,
         profilePicture: user.profilePicture,
-        role: user.role
+        bio: user.bio,
+        role: user.role,
+        createdAt: user.createdAt,
+        reviewsCount: 0,
+        watchlistCount: 0
       }
     });
   } catch (error) {
@@ -56,7 +62,7 @@ router.post('/register', [
   }
 });
 
-// Login - FIXED: Use User.findOne instead of destructured import
+// Login - FIXED: Return createdAt and counts
 router.post('/login', [
   body('email').isEmail().withMessage('Please provide a valid email'),
   body('password').exists().withMessage('Password is required')
@@ -85,15 +91,24 @@ router.post('/login', [
       { expiresIn: '7d' }
     );
 
+    // Get counts
+    const reviewCount = await Review.countDocuments({ user: user._id });
+    const watchlistCount = user.watchlist?.length || 0;
+
     res.json({
       message: 'Login successful',
       token,
       user: {
         id: user._id,
+        _id: user._id,
         username: user.username,
         email: user.email,
         profilePicture: user.profilePicture,
-        role: user.role
+        bio: user.bio,
+        role: user.role,
+        createdAt: user.createdAt,
+        reviewsCount: reviewCount,
+        watchlistCount: watchlistCount
       }
     });
   } catch (error) {
@@ -102,20 +117,32 @@ router.post('/login', [
   }
 });
 
-// Get current user
+// Get current user - FIXED: Return proper counts and use req.user._id
 router.get('/me', protect, async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId)
+    const user = await User.findById(req.user._id)
       .select('-password')
-      .populate('watchlist.movie', 'title posterPath averageRating');
+      .populate('watchlist.movie', 'title posterPath averageRating')
+      .lean();
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    res.json(user);
+    // Get review count
+    const reviewCount = await Review.countDocuments({ user: user._id });
+
+    // Add counts and normalize ID
+    const userWithCounts = {
+      ...user,
+      id: user._id,
+      reviewsCount: reviewCount,
+      watchlistCount: user.watchlist?.length || 0
+    };
+
+    res.json(userWithCounts);
   } catch (error) {
-    console.error(error);
+    console.error('Get user error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

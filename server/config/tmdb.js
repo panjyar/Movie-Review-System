@@ -5,13 +5,11 @@ const TMDB_API_KEY = process.env.TMDB_API_KEY;
 
 const tmdbClient = create({
   baseURL: TMDB_BASE_URL,
-  params: {
-    api_key: TMDB_API_KEY
-  },
+  params: { api_key: TMDB_API_KEY },
   timeout: 10000
 });
 
-// Add response interceptor for error handling
+// Response interceptor for logging errors
 tmdbClient.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -25,14 +23,49 @@ tmdbClient.interceptors.response.use(
 );
 
 const tmdbService = {
+  // Helper to fetch multiple pages
+  async fetchMultiplePages(endpoint, count = 100, extraParams = {}) {
+    const movies = [];
+    const moviesPerPage = 20;
+    const totalPages = Math.ceil(count / moviesPerPage);
+
+    for (let page = 1; page <= totalPages; page++) {
+      const response = await tmdbClient.get(endpoint, {
+        params: { page, ...extraParams }
+      });
+      movies.push(...response.data.results);
+    }
+
+    return movies.slice(0, count);
+  },
+
   // Get trending movies
-  async getTrendingMovies(timeWindow = 'week') {
+  async getTrendingMovies(count = 100, timeWindow = 'week') {
     try {
-      const response = await tmdbClient.get(`/trending/movie/${timeWindow}`);
-      return response.data.results;
+      return await this.fetchMultiplePages(`/trending/movie/${timeWindow}`, count);
     } catch (error) {
       console.error('Error fetching trending movies:', error);
       throw new Error('Failed to fetch trending movies');
+    }
+  },
+
+  // Get popular movies
+  async getPopularMovies(count = 100) {
+    try {
+      return await this.fetchMultiplePages('/movie/popular', count);
+    } catch (error) {
+      console.error('Error fetching popular movies:', error);
+      throw new Error('Failed to fetch popular movies');
+    }
+  },
+
+  // Search movies
+  async searchMovies(query, count = 100) {
+    try {
+      return await this.fetchMultiplePages('/search/movie', count, { query });
+    } catch (error) {
+      console.error('Error searching movies:', error);
+      throw new Error('Failed to search movies');
     }
   },
 
@@ -53,32 +86,6 @@ const tmdbService = {
     } catch (error) {
       console.error('Error fetching movie details:', error);
       throw new Error('Failed to fetch movie details');
-    }
-  },
-
-  // Search movies
-  async searchMovies(query, page = 1) {
-    try {
-      const response = await tmdbClient.get('/search/movie', {
-        params: { query, page }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error searching movies:', error);
-      throw new Error('Failed to search movies');
-    }
-  },
-
-  // Get popular movies
-  async getPopularMovies(page = 1) {
-    try {
-      const response = await tmdbClient.get('/movie/popular', {
-        params: { page }
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching popular movies:', error);
-      throw new Error('Failed to fetch popular movies');
     }
   }
 };

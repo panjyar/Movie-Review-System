@@ -119,13 +119,13 @@ router.patch('/users/:userId/role', async (req, res) => {
   }
 });
 
-// Delete user
+// Delete user - FIXED: Use req.user._id
 router.delete('/users/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Don't allow deleting yourself
-    if (userId === req.user.id) {
+    // FIXED: Don't allow deleting yourself using req.user._id
+    if (userId === req.user._id.toString()) {
       return res.status(400).json({ message: 'Cannot delete your own account' });
     }
 
@@ -145,7 +145,7 @@ router.delete('/users/:userId', async (req, res) => {
   }
 });
 
-// Bulk delete users
+// Bulk delete users - FIXED: Use req.user._id
 router.delete('/users/bulk', async (req, res) => {
   try {
     const { userIds } = req.body;
@@ -154,8 +154,8 @@ router.delete('/users/bulk', async (req, res) => {
       return res.status(400).json({ message: 'User IDs array is required' });
     }
 
-    // Don't allow deleting yourself
-    if (userIds.includes(req.user.id)) {
+    // FIXED: Don't allow deleting yourself
+    if (userIds.includes(req.user._id.toString())) {
       return res.status(400).json({ message: 'Cannot delete your own account' });
     }
 
