@@ -42,7 +42,7 @@ Full-stack movie review platform with user authentication, TMDB integration, and
 
 ```bash
 # Clone & Install
-git clone <repo-url>
+git clone https://github.com/panjyar/Movie-Review-System.git
 cd server && npm install
 cd ../client && npm install
 
